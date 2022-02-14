@@ -4,7 +4,6 @@ from rich.console import Console
 from rich.table import Table
 from rich.markdown import Markdown
 from activation_functions import *
-from nnfs.datasets import spiral_data
 from torchvision import transforms, datasets, utils
 import matplotlib.pyplot as plt
 
@@ -126,71 +125,108 @@ def MSELoss_prime(y_hat, y):
     return 2*(y_hat - y)
 
 
-# (3, 4) (4, 1)
-lr = 0.3
-nn = NeuralNetwork(2, lr)
-nn.append_layer(2, bias=1, activation=sigmoid, activation_prime=sigmoid_prime)
-nn.append_layer(1, bias=1, activation=sigmoid, activation_prime=sigmoid_prime)
-
-# X = np.array([[1, 2, 3]])
-# y = np.array([[1, 0, 0]])
-#
-# for epoch in range(30):
-#     predicted = nn.forward(X)
-#     loss = MSELoss(predicted, y)
-#     loss_derivative = MSELoss_prime(predicted, y)
-#     nn.backward(loss_derivative)
-#     print(loss)
+# Cria vetor one hot mnist
+def one_hot(value: int):
+    one_hot_vec = np.zeros((1, 10))
+    one_hot_vec[0][value] = 1
+    return one_hot_vec
 
 
-X = np.array([[0,0], [1, 0], [1, 1], [0, 1]])
-y = np.array([0, 1, 0, 1])
-losses = []
+if __name__ == "__main__":
+    # (3, 4) (4, 1)
+    # lr = 0.3
+    # nn = NeuralNetwork(2, lr)
+    # nn.append_layer(2, bias=1, activation=sigmoid, activation_prime=sigmoid_prime)
+    # nn.append_layer(1, bias=1, activation=sigmoid, activation_prime=sigmoid_prime)
 
-for epoch in range(2000):
-    total_loss = 0
-    for x, y0 in zip(X, y):
-        predicted = nn.forward(x.reshape(1,-1))
-        loss = MSELoss(predicted, y0)
-        loss_derivative = MSELoss_prime(predicted, y0)
-        nn.backward(loss_derivative)
-        total_loss += loss
-    if (epoch + 1) % 100 == 0:
-        print(f"Epoch {epoch+1} - Loss: {total_loss}")
-    losses.append(total_loss)
+    # X = np.array([[1, 2, 3]])
+    # y = np.array([[1, 0, 0]])
+    #
+    # for epoch in range(30):
+    #     predicted = nn.forward(X)
+    #     loss = MSELoss(predicted, y)
+    #     loss_derivative = MSELoss_prime(predicted, y)
+    #     nn.backward(loss_derivative)
+    #     print(loss)
 
-plt.plot(losses)
-plt.show()
 
-while True:
-    i1 = int(input())
-    i2 = int(input())
-    if i1 > 1 or i2 > 1:
-        break
-    predicted_xor = nn.forward(np.array([i1,i2]))
-    print(predicted_xor)
-    print(f"Xor: {np.round(predicted_xor[0])}")
+    # X = np.array([[0,0], [1, 0], [1, 1], [0, 1]])
+    # y = np.array([0, 1, 0, 1])
+    # losses = []
+    #
+    # for epoch in range(2000):
+    #     total_loss = 0
+    #     for x, y0 in zip(X, y):
+    #         predicted = nn.forward(x.reshape(1,-1))
+    #         loss = MSELoss(predicted, y0)
+    #         loss_derivative = MSELoss_prime(predicted, y0)
+    #         nn.backward(loss_derivative)
+    #         total_loss += loss
+    #     if (epoch + 1) % 100 == 0:
+    #         print(f"Epoch {epoch+1} - Loss: {total_loss}")
+    #     losses.append(total_loss)
 
-# Expected type '(ndarray) -> ndarray', got 'Type[Sigmoid]' instead
+    # plt.plot(losses)
+    # plt.show()
 
-# ================ #
-# Data Preparation #
-# ================ #
-#
-# Setting up the transformations needed for the digits images
-transform = transforms.Compose([
-            transforms.Resize((28,28)),
-            transforms.Grayscale(),
-            transforms.ToTensor(),
-            transforms.Normalize((0,), (1,))])
+    # while True:
+    #     i1 = int(input())
+    #     i2 = int(input())
+    #     if i1 > 1 or i2 > 1:
+    #         break
+    #     predicted_xor = nn.forward(np.array([i1,i2]))
+    #     print(predicted_xor)
+    #     print(f"Xor: {np.round(predicted_xor[0])}")
 
-# Downloading MNIST dataset
-data_path='/data/mnist'
-mnist_train = datasets.MNIST(data_path, train=True, download=True, transform=transform)
-num_classes = 10  # MNIST has 10 output classes
-print(f"The size of mnist_train is {len(mnist_train)}")
+    # Expected type '(ndarray) -> ndarray', got 'Type[Sigmoid]' instead
 
-# Defining a subset with N=10 items
-subset = 10
-utils.data_subset(mnist_train, subset)
-print(f"The size of mnist_train is {len(mnist_train)}")
+    # ================ #
+    # Data Preparation #
+    # ================ #
+    #
+    # Setting up the transformations needed for the digits images
+    transform = transforms.Compose([
+                transforms.Resize((28,28)),
+                transforms.Grayscale(),
+                transforms.ToTensor(),
+                # transforms.Normalize(.13, .30)
+    ])
+
+    # Downloading MNIST dataset
+    data_path='/data/mnist'
+    mnist_train = datasets.MNIST(data_path, train=True, transform=transform)
+    num_classes = 10  # MNIST has 10 output classes
+    print(f"The size of mnist_train is {len(mnist_train)}")
+
+    # train_set = mnist_train[:58000].data.numpy()/255
+    # test_set = mnist_train[].data.numpy()/255
+    train_set = mnist_train.data.numpy()
+
+    targets = [one_hot(t) for t in mnist_train.targets]
+    # Defining a subset with N=10 items
+    # subset = 10
+    # utils.data(mnist_train, subset)
+    # print(f"The size of train_set is {len(train_set)}")
+    # print(type(train_set[0][0]))
+    # print(train_set.shape)
+    lr = 0.003
+    # nn = NeuralNetwork(10, lr)
+    nn = NeuralNetwork(28*28, lr)
+    nn.append_layer(40, bias=1, activation=sigmoid, activation_prime=sigmoid_prime)
+    nn.append_layer(40, bias=1, activation=sigmoid, activation_prime=sigmoid_prime)
+    nn.append_layer(10, bias=1, activation=sigmoid, activation_prime=sigmoid_prime)
+
+    # nn.forward(train_set[0].flatten().reshape(1,-1))
+    # print(train_set[0].flatten().reshape(1,-1))
+    for i in range(10):
+        total_loss = 0
+        for x, y in zip(train_set, targets):
+            # y_hat = nn.forward(y.reshape(1, -1))
+            y_hat = nn.forward(x.flatten().reshape(1,-1))
+            loss = MSELoss(y_hat, y)
+            # print(f'Y: {y} | Ŷ: {y_hat} | MSE: {(loss)}')
+            loss_derivative = MSELoss_prime(y_hat, y)
+            nn.backward(loss_derivative)
+            # print(loss, loss_derivative)
+            total_loss += loss
+        print(f"Loss: {total_loss/len(train_set)} - Epoch: {i+1}")
